@@ -8,7 +8,7 @@ class File:
         self.name = name_of
         self.path = path_to
         self.size = size_of
-        self.type = type_of[1:]
+        self.type = type_of
         self.hash = hash_of
 
     def __str__(self):
@@ -26,10 +26,11 @@ def sorter(list_of_objects, order):
 all_files = []
 files_sizes = []
 files_hashes = []
-same_size = {size: file for size in files_sizes for file in all_files if file.size == size}
+files_with_same_hashes = {}
+files_with_same_sizes = {}
 
 try:
-    root_path = 'D:\\Перенос\\Документы'  #sys.argv[1]  # reading command line argument [0] - its script file itself, [1] - its path to root folder
+    root_path = sys.argv[1]  # reading command line argument [0] 'E:\\down\\torrents' its script file itself, [1] - its path to root folder
     if os.path.isdir(root_path) or os.path.isfile(root_path):
         for root, dirs, files in os.walk(root_path):
             for name in files:
@@ -64,21 +65,6 @@ for file in all_files:  # creating list of different sizes of objects
     if file.hash not in files_hashes:
         files_hashes.append(file.hash)
 
-same_size = {size: [file for file in all_files if file.size == size]for size in files_sizes}
-for size, files in same_size.items():
-    print(size)
-    for file in files:
-        print(file)
-same_hash = {size: {hash_: [file for file in all_files if file.size == size and file.hash == hash_]
-                    for hash_ in files_hashes}
-             for size in files_sizes}
-for size, hashes in same_hash.items():
-    print(size)
-    for hash_, files in hashes.items():
-        #print(hash_)
-        for file in files:
-            print(file, hash_)
-
 # for size in files_sizes:
 #     print(f"\n{size} bytes")
 #     for file in all_files:
@@ -86,23 +72,37 @@ for size, hashes in same_hash.items():
 #             if file.size == size:
 #                 print(file)
 
-# while True:
-#     print("""\nCheck for duplicates? yes\\no""")
-#     duplicates = input(">")
-#     if duplicates in ['yes', 'no']:
-#         break
-#     else:
-#         print("Wrong option")
+files_with_same_sizes = {size: [file for file in all_files if file.size == size] for size in files_sizes}
+for size, files in files_with_same_sizes.items():
+    print(f"\n{size} bytes")
+    for file in files:
+        print(file)
 
-# if duplicates == 'yes':
-#     n = 1
-#     for size in files_sizes:
-#         print(f"\n{size} bytes")
-#         for hash_ in files_hashes:
-#             print(f"Hash: {hash_}")
-#             for file in all_files:
-#                 if file.hash == hash_:
-#                     print(f"{n}. {file}")
-#                     n += 1
+files_with_same_hashes = {size: {hash_: [file for file in all_files if file.hash == hash_
+                                         and file.size == size
+                                         and (file.type == requested_ext or requested_ext == '')]
+                                 for hash_ in files_hashes}
+                          for size in files_sizes}
+
+while True:
+    print("""\nCheck for duplicates? yes\\no""")
+    duplicates = input(">")
+    if duplicates in ['yes', 'no']:
+        break
+    else:
+        print("Wrong option")
+
+if duplicates == 'yes':
+    n = 1
+    for size, hashes in files_with_same_hashes.items():
+        for hash_, files in hashes.items():
+            if len(files) > 0:
+                print(f"\n{size} bytes")
+                print('Hash:', hash_)
+                for file in files:
+                    print(n, file)
+                    n += 1
+
+
 
 
