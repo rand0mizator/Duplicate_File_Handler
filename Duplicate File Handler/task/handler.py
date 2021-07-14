@@ -10,6 +10,7 @@ class File:
         self.size = size_of
         self.type = type_of[1:]  # removing dot from extension name
         self.hash = hash_of.hexdigest()  # hash in form: 909ba4ad2bda46b10aac3c5b7f01abd5
+        self.id = None
 
     def __str__(self):
         return f"{self.path}"
@@ -21,6 +22,19 @@ def sorter(list_of_objects, order):
         return sorted(list_of_objects, key=lambda x: -x.size)
     elif order == '2':  # ascending
         return sorted(list_of_objects, key=lambda x: x.size)
+
+
+def delete_files(files_to_delete):
+    """Deletes files by file.id. Takes list with id's as input. Count size of deleted files."""
+    counter = 0
+    for size, hashes in files_with_same_hashes.items():
+            for hash_, files in hashes.items():
+                if len(files) > 1:
+                    for file in files:
+                        if file.id in files_to_delete:
+                            os.remove(file.path)
+                            counter += file.size
+    return counter
 
 
 all_files = []
@@ -77,7 +91,7 @@ for size, files in files_with_same_sizes.items():
     for file in files:
         print(file)
 
-
+n = 1
 while True:
     print("\nCheck for duplicates? yes\\no")
     duplicates = input()
@@ -90,8 +104,6 @@ while True:
                                          for hash_ in files_hashes}
                                   for size in files_sizes}
 
-        n = 1
-
         for size, hashes in files_with_same_hashes.items():
             print(f"\n{size} bytes")
             for hash_, files in hashes.items():
@@ -99,10 +111,33 @@ while True:
                     print('Hash:', hash_)
                     for file in files:
                         print(f"{n}. {file}")
+                        file.id = n  # save number of file in output, so we can address by it for deleting
                         n += 1
 
         break
     elif duplicates == 'no':
+        break
+    else:
+        print("Wrong option")
+
+while True:
+    print("Delete files?")
+    deleting = input()
+    if deleting == 'yes':
+        while True:
+            print("Enter file numbers to delete:")
+            try:
+                files_to_delete = [int(n) for n in input().split()]
+                if len(files_to_delete) > n - 1 or len(files_to_delete) == 0:  # solve problem with empty and overnumbered inputs
+                    print("Wrong format")
+                else:
+                    freed_space = delete_files(files_to_delete)
+                    print(f"Total freed up space: {freed_space} bytes")
+                    break
+            except ValueError:  # bad desicion but cant think better. Just catch inputs that cant be converted in int()
+                print("Wrong format")
+        break
+    elif deleting == 'no':
         break
     else:
         print("Wrong option")
